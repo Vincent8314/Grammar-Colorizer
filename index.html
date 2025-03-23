@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<!-- Copyright © 2025/03/23. Libouton Vincent S.F. All rights reserved.
+Unauthorized copying, modification, distribution, or use of this code
+is strictly prohibited without express written permission.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grammar Colorizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #121212; /* Dark Mode */
+    color: #e0e0e0; /* Soft white text */
+    padding: 20px;
+  }
+
+  .header {
+    /* Created with https://www.css-gradient.com
+    * Gradient link: https://www.css-gradient.com/?c1=6235bc&c2=6955e5&gt=l&gd=dcr*/
+    background: #a871ff;
+    background: linear-gradient(270deg, #6235BC, #6955E5);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    margin-bottom: 5px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .editor-section {
+    flex: 1 1 600px;
+  }
+
+  .controls {
+    margin-bottom: 15px;
+  }
+
+  .btn {
+    background-color: #6235BC;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background-color: #8A60C9;
+    transform: scale(1.02);
+  }
+
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  .btn {
+    transition: transform 0.3s ease;
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+  }
+
+  .editor, .preview {
+    width: 100%;
+    height: 400px;
+    font-size: 1.2em;
+    padding: 15px;
+    border-radius: 4px;
+    background-color: #000000; /* Dark Mode Editor */
+    color: #f2f0ec;
+    font-family: monospace;
+    line-height: 1.5;
+    margin-bottom: 15px;
+  }
+
+  .editor {
+    border: none;
+    resize: vertical;
+    outline: none;
+  }
+
+  .preview {
+    display: none;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .legend-section {
+    flex: 1 1 300px;
+    background: #000000; /* Light gray instead of white for better contrast */
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: #f2f0ec; /* Soft white text */
+  }
+
+  .legend-section h2 {
+    color: #a871ff;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .color-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    margin-right: 12px;
+    border: 1px solid rgba(0,0,0,0.2); /* Add border to all color boxes */
+  }
+
+  /* Part of speech colors based on updated RGB values */
+  .noun         { color: rgb(0, 130, 255); } /* Blue */
+  .pronoun      { color: rgb(255, 0, 0); } /* Red */
+  .verb         { color: rgb(255, 64, 255); } /* Pink */
+  .preposition  { color: rgb(128, 0, 255); } /* Purple */
+  .adverb       { color: rgb(255, 127, 0); } /* Orange */
+  .adjective    { color: rgb(0, 170, 0); } /* Green */
+  .conjunction  { color: rgb(128, 128, 128); } /* Silver */
+  .determiner   { color: rgb(230, 200, 0); } /* Yellow */
+  .interjection { color: rgb(0, 220, 220); font-weight: bold; } /* Cyan + Bold */
+  /*.particle     { color: rgb(128, 128, 128); } /* Gray */
+  .number       { color: rgb(64, 255, 64); } /* Bright Green */
+  .punctuation  { color: rgb(255, 255, 255); } /* White */
+  .unknown      { color: rgb(255, 255, 255); } /* White */
+
+
+  /* Special styling for "to be" verbs */
+  .verb.is-form { 
+    font-weight: bold; /* Make "to be" verbs bold, but not automatically underlined */
+  }
+
+  /* Underline mode - Only applied when the user toggles it */
+  .underline-mode span {
+    text-decoration: underline !important;
+  }
+
+  /* Color boxes for the legend - UPDATED to match the text colors above */
+  .noun-box         { background-color: rgb(0, 130, 255); } /* Blue */
+  .pronoun-box      { background-color: rgb(255, 0, 0); } /* Red */
+  .verb-box         { background-color: rgb(255, 64, 255); } /* Pink */
+  .preposition-box  { background-color: rgb(128, 0, 255); } /* Purple */
+  .adverb-box       { background-color: rgb(255, 127, 0); } /* Orange */
+  .adjective-box    { background-color: rgb(0, 170, 0); } /* Green */
+  .conjunction-box  { background-color: rgb(128, 128, 128); } /* Silver */
+  .determiner-box   { background-color: rgb(230, 200, 0); } /* Yellow */
+  .interjection-box { background-color: rgb(0, 220, 220); } /* Cyan */
+  /*.particle-box     { background-color: rgb(128, 128, 128); } /* Gray */
+  .number-box       { background-color: rgb(64, 255, 64); } /* Bright Green */
+  .punctuation-box  { background-color: rgb(255, 255, 255); border: 1px solid #555; } /* White */
+  .unknown-box      { background-color: rgb(255, 255, 255); border: 1px solid #555; } /* White */
+
+  /* Add legend text labels with better contrast */
+  .legend-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  /* Speech-to-Text Styles */
+  .speech-input {
+    background-color: #1e1e1e;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .speech-input-title {
+    color: #a871ff;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .speech-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .mic-btn {
+    background-color: #d63031;
+    color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-size:1em;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .mic-btn:hover {
+    background-color: #ff4d4f;
+    transform:scale(1.02);
+  }
+
+  .mic-btn:active {
+    transform: scale(0.98);
+  }
+
+  .mic-btn.listening {
+    animation: pulse 1.5s infinite;
+  }
+
+  .mic-icon {
+    width: 12px;
+    height: 12px;
+    background-color: white;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .speech-status {
+    color: #a771ff;
+    font-style: italic;
+    margin-top: 5px;
+  }
+
+  .language-select {
+    background-color: #2c2c2c;
+    color: white;
+    border: 1px solid #a871ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+
+  /* Recording Animation */
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(214, 48, 49, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(214, 48, 49, 0);
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+    .editor, .preview {
+      height: 300px;
+    }
+  }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Grammar Colorizer</h1>
+    <p>Colors Parts of Speech Automatically</p>
+  </div>
+  
+  <div class="container">
+    <div class="editor-section">
+      <!-- Speech-to-Text Section -->
+      <div class="speech-input">
+        <h3 class="speech-input-title">Speech-to-Text</h3>
+        <div class="speech-controls">
+          <button id="mic-btn" class="mic-btn">
+            <span class="mic-icon"></span>
+            Start Listening
+          </button>
+          <select id="language-select" class="language-select">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="fr-FR">French</option>
+            <option value="es-ES">Spanish</option>
+            <option value="de-DE">German</option>
+          </select>
+        </div>
+        <div id="speech-status" class="speech-status">Ready to listen</div>
+      </div>
+      
+      <div class="controls">
+        <button id="toggle-btn" class="btn">Switch to Preview</button>
+        <button id="clear-btn" class="btn">Clear Text</button>
+        <button id="underline-btn" class="btn">Add Underlines</button>
+        <button id="undo-btn" class="btn" disabled>Undo</button>
+        <button id="redo-btn" class="btn" disabled>Redo</button>
+      </div>
+      
+      <textarea id="editor" class="editor" spellcheck="false">Speech Examples
+
+- Noun: Person, place, thing, or idea. 
+Examples: dog, house, John, car, love.
+- Pronoun: Replaces a noun. 
+Examples: I, you, he, she, it, we, they, who.
+- Verb: Action or state of being. 
+Examples: run, swim, are, was.        
+- Adverb: Modifies verb, adjective, or adverb. 
+Examples: quickly, very, slowly, really, extremely.
+- Adjective: Describes a noun. 
+Examples: happy, sad, big, small, red.
+- Determiner: Specifies nouns, includes articles. 
+Examples: a, an, the, this, these, those.
+- Preposition: Shows relationship. 
+Examples: in, on, at, to, for.
+- Conjunction: Connects words or phrases. 
+Examples: and, but, or.
+- Interjection: Expresses emotion. 
+Examples: oh, hey.
+- Numbers: Numeric values. 
+Examples: 1, 2, 3, one, two, three.
+- Punctuation etc: Marks used in writing. 
+Examples: .  ,  !  ?  ;  : 
+
+Click "Start Listening" and speak to see your words appear here!
+</textarea>
+      
+      <div id="preview" class="preview"></div>
+      
+      <div class="status" id="status">Status: Edit Mode</div>
+    </div>
+    
+    <div class="legend-section">
+      <h2>Parts of Speech Legend</h2>
+      
+      <div class="legend-item" data-pos="pronoun">
+        <div class="color-box pronoun-box"></div>
+        <span>Pronoun - I, you, he, she</span>
+      </div>
+      <div class="legend-item" data-pos="noun">
+        <div class="color-box noun-box"></div>
+        <span>Noun - dog, house, love</span>
+      </div>
+      <div class="legend-item" data-pos="adverb">
+        <div class="color-box adverb-box"></div>
+        <span>Adverb - quickly, very, slowly</span>
+      </div>
+      <div class="legend-item" data-pos="verb">
+        <div class="color-box verb-box"></div>
+        <span>Verb - run, swim, are</span>
+      </div>
+      <div class="legend-item" data-pos="determiner">
+        <div class="color-box determiner-box"></div>
+        <span>Determiner - a, an, the, this</span>
+      </div>   
+      <div class="legend-item" data-pos="preposition">
+        <div class="color-box preposition-box"></div>
+        <span>Preposition - in, on, at, to</span>
+      </div>
+      <div class="legend-item" data-pos="adjective">
+        <div class="color-box adjective-box"></div>
+        <span>Adjective - happy, big, red</span>
+      </div>
+      <div class="legend-item" data-pos="conjunction">
+        <div class="color-box conjunction-box"></div>
+        <span>Conjunction - and, but, or</span>
+      </div>      
+      
+      <div class="legend-item" data-pos="interjection">
+        <div class="color-box interjection-box"></div>
+        <span>Interjection - oh, wow, hey</span>
+      </div>
+      
+      <div class="legend-item" data-pos="number">
+        <div class="color-box number-box"></div>
+        <span>Number - 1, 2, one, two</span>
+      </div>
+      <div class="legend-item" data-pos="punctuation">
+        <div class="color-box punctuation-box"></div>
+        <span>Punctuation - . , ! ?</span>
+      </div>     
+      <p style="margin-top: 20px;">Click on any color to toggle highlighting for that part of speech</p>
+    </div>
+  </div>
+  <!-- Load the RiTa.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rita/2.8.1/rita.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
